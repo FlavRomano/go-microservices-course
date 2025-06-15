@@ -1,0 +1,162 @@
+{{template "base" .}}
+
+{{define "content" }}
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <h1 class="mt-5">Test microservices</h1>
+                <hr>
+
+                <a id="brokerBtn" class="btn btn-outline-secondary" href="javascript:void(0);">Test broker</a>
+                <a id="authBrokerBtn" class="btn btn-outline-secondary" href="javascript:void(0);">Test authenticator</a>
+                <a id="logBrokerBtn" class="btn btn-outline-secondary" href="javascript:void(0);">Test logger</a>
+                <a id="mailBrokerBtn" class="btn btn-outline-secondary" href="javascript:void(0);">Test mailer</a>
+
+                <div id="output" class="mt-5" style="outline: 1px solid silver; padding: 2em;">
+                    <span class="text-muted">Output shows here...</span>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <h4 class="mt-5">Sent</h4>
+                <div class="mt-1" style="outline: 1px solid silver; padding: 2em;">
+                    <pre id="payload"><span class="text-muted">Nothing sent yet...</span></pre>
+                </div>
+            </div>
+            <div class="col">
+                <h4 class="mt-5">Received</h4>
+                <div class="mt-1" style="outline: 1px solid silver; padding: 2em;">
+                    <pre id="received"><span class="text-muted">Nothing received yet...</span></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+{{end}}
+
+{{define "js"}}
+    <script>
+        let brokerBtn = document.getElementById("brokerBtn");
+        let authBrokerBtn = document.getElementById("authBrokerBtn");
+        let logBrokerBtn = document.getElementById("logBrokerBtn");
+        let mailBrokerBtn = document.getElementById("mailBrokerBtn");
+
+        let output = document.getElementById("output");
+        let sent = document.getElementById("payload");
+        let received = document.getElementById("received");
+
+        mailBrokerBtn.addEventListener("click", () => {
+            const payload = {
+                    action: "mail",
+                    mail: {
+                        from: "broker@pisa.it",
+                        to: "flavio@example.it",
+                        subject: "Ciao amico mio",
+                        message: "Unni su i soddi"
+                    }
+                }
+
+            const headers = new Headers();
+            headers.append("Content-Type", "application/json")
+            
+            const request = {
+                method: "POST",
+                body: JSON.stringify(payload),
+                headers: headers
+            }
+
+            fetch("http://localhost:8080/handle", request)
+            .then((resp) => resp.json())
+            .then((data) => {
+                sent.innerHTML = JSON.stringify(payload, undefined, 4);;
+                received.innerHTML = JSON.stringify(data, undefined, 4);
+                if (data.error) {
+                    output.innerHTML += `<br>Error: ${data.message}</br>`
+                } else {
+                    output.innerHTML += "Response from broker service: " + data.message + "\n"; 
+                }
+            })
+        })
+
+        logBrokerBtn.addEventListener("click", () => {
+            const payload = {
+                    action: "log",
+                    log: {
+                        name: "broker",
+                        data: "ciao, sono il broker"
+                    }
+                }
+
+            const headers = new Headers();
+            headers.append("Content-Type", "application/json")
+            
+            const request = {
+                method: "POST",
+                body: JSON.stringify(payload),
+                headers: headers
+            }
+
+            fetch("http://localhost:8080/handle", request)
+            .then((resp) => resp.json())
+            .then((data) => {
+                sent.innerHTML = JSON.stringify(payload, undefined, 4);;
+                received.innerHTML = JSON.stringify(data, undefined, 4);
+                if (data.error) {
+                    output.innerHTML += `<br>Error: ${data.message}</br>`
+                } else {
+                    output.innerHTML += "Response from broker service: " + data.message + "\n"; 
+                }
+            })
+        })
+
+        authBrokerBtn.addEventListener("click", () => {
+            const payload = {
+                action: "auth",
+                auth: {
+                    email: "admin@example.com",
+                    password: "verysecret"
+                }
+            }
+
+            const headers = new Headers();
+            headers.append("Content-Type", "application/json")
+            
+            const request = {
+                method: "POST",
+                body: JSON.stringify(payload),
+                headers: headers
+            }
+
+            fetch("http://localhost:8080/handle", request)
+            .then((resp) => resp.json())
+            .then((data) => {
+                sent.innerHTML = JSON.stringify(payload, undefined, 4);;
+                received.innerHTML = JSON.stringify(data, undefined, 4);
+                if (data.error) {
+                    output.innerHTML += `<br>Error: ${data.message}</br>`
+                } else {
+                    output.innerHTML += "Response from broker service: " + data.message + "\n"; 
+                }
+            })
+        })
+
+        brokerBtn.addEventListener("click", () => {
+            const request = {
+                method: "POST"
+            }
+
+            fetch("http://localhost:8080", request)
+            .then((resp) => resp.json())
+            .then((data) => {
+                sent.innerHTML = "empty post request";
+                received.innerHTML = JSON.stringify(data, undefined, 4);
+                if (data.error) {
+                    console.log(data.message)
+                } else {
+                    output.innerHTML += "Response from broker service: " + data.message + "\n"; 
+                }
+            })
+        })
+
+    </script>
+{{end}}
