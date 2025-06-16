@@ -5,7 +5,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"log"
 	"net/http"
+	"net/rpc"
+	"os"
 )
 
 type requestPayload struct {
@@ -41,6 +45,8 @@ func (app *Config) Broker(w http.ResponseWriter, r *http.Request) {
 	_ = app.writeJSON(w, http.StatusOK, payload)
 }
 
+var logMode = os.Getenv("LOG_MODE")
+
 func (app *Config) HandleSubmission(w http.ResponseWriter, r *http.Request) {
 	var requestPayload requestPayload
 
@@ -54,7 +60,13 @@ func (app *Config) HandleSubmission(w http.ResponseWriter, r *http.Request) {
 	case "auth":
 		app.authenticate(w, requestPayload.Auth)
 	case "log":
-		app.logEventViaRabbit(w, requestPayload.Log)
+		if logMode == "RABBIT" {
+			app.logEventViaRabbit(w, requestPayload.Log)
+		} else if logMode == "RPC" {
+			app.logItemViaRPC(w, requestPayload.Log)
+		} else {
+			app.log(w, requestPayload.Log)
+		}
 	case "mail":
 		app.mail(w, requestPayload.Mail)
 	default:
@@ -200,4 +212,41 @@ func (app *Config) pushToQueue(name, msg string) error {
 	}
 
 	return nil
+}
+
+var loggerRpcServer = os.Getenv("LOGGER_RPC_SERVER")
+var loggerRpcPort = os.Getenv("LOGGER_RPC_PORT")
+
+type RPCPayload struct {
+	Name string
+	Data string
+}
+
+func (app *Config) logItemViaRPC(w http.ResponseWriter, l LogPayload) {
+	addr := fmt.Sprintf("%s:%s", loggerRpcServer, loggerRpcPort)
+	log.Println("Trying to dial with address", addr)
+	client, err := rpc.Dial("tcp", addr)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+	defer client.Close()
+
+	rpcPayload := RPCPayload{
+		Name: l.Name,
+		Data: l.Data,
+	}
+
+	var result string
+	log.Println("Calling RPCServer.LogInfo")
+	err = client.Call("RPCServer.LogInfo", rpcPayload, &result)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+	payloadResponse := jsonResponse{
+		Error:   false,
+		Message: result,
+	}
+	app.writeJSON(w, http.StatusAccepted, payloadResponse)
 }

@@ -34,15 +34,19 @@ func (app *Config) rpcListen() error {
 		fmt.Sprintf("0.0.0.0:%s", rpcPort),
 	)
 	if err != nil {
+		log.Println("Can't listen for RPC")
 		return err
 	}
 	defer listen.Close()
 
 	for {
+		log.Println("Accepting connection...")
 		rpcConn, err := listen.Accept()
 		if err != nil {
+			log.Println("Got an error", err, "from", rpcConn.RemoteAddr())
 			continue
 		}
+		log.Println("Connection accepted ", rpcConn.RemoteAddr().String(), "now serving it")
 		go rpc.ServeConn(rpcConn)
 	}
 }

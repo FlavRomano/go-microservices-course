@@ -9,6 +9,10 @@ services:
         deploy:
             mode: replicated
             replicas: 1
+        environment:
+            LOGGER_RPC_SERVER: "logger-service"
+            LOGGER_RPC_PORT: 5001
+            LOG_MODE: "RPC"
 
     authentication-service:
         build:
@@ -28,8 +32,6 @@ services:
             context: ./../logger-service
             dockerfile: ./../logger-service/Dockerfile
         restart: always
-        ports:
-            - "8082:8080"
         deploy:
             mode: replicated
             replicas: 1

@@ -15,7 +15,9 @@ type RPCPayload struct {
 	Data string
 }
 
+// any method that I want to expose via RPC needs to be public (capital letter)
 func (r *RPCServer) LogInfo(payload RPCPayload, resp *string) error {
+	log.Println("Logging through RPC now")
 	collection := mongoClient.Database("logs").Collection("logs")
 	_, err := collection.InsertOne(context.TODO(), data.LogEntry{
 		Name:      payload.Name,
