@@ -35,7 +35,7 @@ services:
             replicas: 1
         environment:
             DSN: "host=postgres port=5432 user=postgres password=password dbname=users sslmode=disable timezone=UTC connect_timeout=5"
-    
+
     mail-service:
         build:
             context: ./../mail-service
@@ -66,6 +66,9 @@ services:
         deploy:
             mode: replicated
             replicas: 1
+        environment:
+            TOPICS: "LOG.info,LOG.error,LOG.warn"
+            RABBITMQ_URL: "amqp://guest:guest@rabbitmq"
 
     postgres:
         image: "postgres:14.0"
@@ -98,12 +101,12 @@ services:
             - "8025:8025"
 
     rabbitmq:
-      image: "rabbitmq:alpine"
-      ports:
-       - "5672:5672"
-      restart: always
-      deploy:
-        mode: replicated
-        replicas: 1
-      volumes:
-        - ./db-data/rabbitmq/:/var/lib/rabbitmq/
+        image: "rabbitmq:alpine"
+        ports:
+            - "5672:5672"
+        restart: always
+        deploy:
+            mode: replicated
+            replicas: 1
+        volumes:
+            - ./db-data/rabbitmq/:/var/lib/rabbitmq/

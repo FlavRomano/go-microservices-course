@@ -4,6 +4,8 @@ import (
 	"listener-service/event"
 	"log"
 	"math"
+	"os"
+	"strings"
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -15,7 +17,8 @@ func connect() (*amqp.Connection, error) {
 	var connection *amqp.Connection
 
 	for {
-		c, err := amqp.Dial("amqp://guest:guest@rabbitmq")
+		rabbitmqUrl := os.Getenv("RABBITMQ_URL")
+		c, err := amqp.Dial(rabbitmqUrl)
 		if err != nil {
 			log.Println("Still can't connect to rabbitmq")
 			counts++
@@ -34,6 +37,11 @@ func connect() (*amqp.Connection, error) {
 
 	}
 	return connection, nil
+}
+
+func readTopics() []string {
+	topicsString := os.Getenv("TOPICS")
+	return strings.Split(topicsString, ",")
 }
 
 func main() {
@@ -57,7 +65,7 @@ func main() {
 	}
 
 	// observe the queue and consume the event
-	err = consumer.Listen([]string{"LOG.info", "LOG.warn", "LOG.error"})
+	err = consumer.Listen(readTopics())
 	if err != nil {
 		log.Println(err)
 	}
