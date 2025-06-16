@@ -105,5 +105,6 @@ func main() {
 		panic(err)
 	}
 	go app.rpcListen()
+	go app.gRPCListen()
 	app.serve()
 }
