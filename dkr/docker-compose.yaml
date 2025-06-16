@@ -12,6 +12,7 @@ services:
         environment:
             LOGGER_RPC_SERVER: "logger-service"
             LOGGER_RPC_PORT: 5001
+            LOGGER_GRPC_PORT: 50001
             LOG_MODE: "RPC"
 
     authentication-service:
