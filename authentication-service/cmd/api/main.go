@@ -19,8 +19,7 @@ const webPort = "8080"
 var counts int64
 
 type Config struct {
-	DB     *sql.DB
-	Models data.Models
+	Repository data.Repository
 }
 
 func openDB(dsn string) (*sql.DB, error) {
@@ -35,6 +34,11 @@ func openDB(dsn string) (*sql.DB, error) {
 	}
 
 	return db, nil
+}
+
+func (app *Config) setupRepo(conn *sql.DB) {
+	db := data.NewPostgresRepository(conn)
+	app.Repository = db
 }
 
 func connectToDB() *sql.DB {
@@ -69,10 +73,8 @@ func main() {
 		log.Panic("Can't connect to DB")
 	}
 
-	app := Config{
-		DB:     conn,
-		Models: data.New(conn),
-	}
+	app := Config{}
+	app.setupRepo(conn)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", webPort),
