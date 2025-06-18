@@ -20,6 +20,7 @@ var counts int64
 
 type Config struct {
 	Repository data.Repository
+	Client     *http.Client
 }
 
 func openDB(dsn string) (*sql.DB, error) {
@@ -73,7 +74,9 @@ func main() {
 		log.Panic("Can't connect to DB")
 	}
 
-	app := Config{}
+	app := Config{
+		Client: &http.Client{},
+	}
 	app.setupRepo(conn)
 
 	srv := &http.Server{

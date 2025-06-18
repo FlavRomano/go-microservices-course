@@ -34,7 +34,7 @@ func (app *Config) log(name, data string) error {
 		return err
 	}
 
-	_, err = http.DefaultClient.Do(request)
+	_, err = app.Client.Do(request)
 	if err != nil {
 		log.Println("Error on POST to logger-service.", err)
 		return err
